@@ -1,0 +1,675 @@
+---
+title: "Group2_Chicago_Bike_Rental"
+author: "Vinay Danepalli"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+install.packages("dplyr", "geosphere", "stringr", "httr", "tidyverse", "lubridate")
+install.packages("rmarkdown", "knitr", "forecast", "xts")
+install.packages("factoextra")
+
+install.packages("ggplot2")
+install.packages("nnet")
+install.packages("caret")
+install.packages("tensorflow")
+install.packages("keras")
+install.packages("randomForest")
+install.packages("shinydashboard")
+install.packages("deepnet")
+
+```{r}
+# load required packages -----
+library(stringr)
+library(httr)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(geosphere)
+library(rmarkdown)
+library(knitr)
+library(forecast)
+library(xts)
+library(cluster)   
+library(factoextra)
+library(ggplot2)
+library(nnet)
+library(caret)
+library(tensorflow)
+library(keras)
+library(randomForest)
+library(shinydashboard)
+library(deepnet)
+```
+
+# download and import data ------
+
+```{r}
+# download and import 202004
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202004-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202004 <- read.csv(unz(temp, '202004-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+
+```{r}
+# download and import 202005
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202005-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202005 <- read.csv(unz(temp, '202005-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202006
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202006-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202006 <- read.csv(unz(temp, '202006-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202007
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202007-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202007 <- read.csv(unz(temp, '202007-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202008
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202008-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202008 <- read.csv(unz(temp, '202008-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202009
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202009-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202009 <- read.csv(unz(temp, '202009-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202010
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202010-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202010 <- read.csv(unz(temp, '202010-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202011
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202011-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202011 <- read.csv(unz(temp, '202011-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202012
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202012-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202012 <- read.csv(unz(temp, '202012-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202101
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202101-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202101 <- read.csv(unz(temp, '202101-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202102
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202102-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202102 <- read.csv(unz(temp, '202102-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# download and import 202103
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202103-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202103 <- read.csv(unz(temp, '202103-divvy-tripdata.csv'))
+unlink(temp)
+```
+# ======================================================
+
+```{r}
+# download and import 202104
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202104-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202104 <- read.csv(unz(temp, '202104-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202105
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202105-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202105 <- read.csv(unz(temp, '202105-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202106
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202106-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202106 <- read.csv(unz(temp, '202106-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202107
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202107-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+data_202107 <- read.csv(unz(temp, '202107-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202108
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202108-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202108 <- read.csv(unz(temp, '202108-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202109
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202109-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202109 <- read.csv(unz(temp, '202109-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202110
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202110-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202110 <- read.csv(unz(temp, '202110-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202111
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202111-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202111 <- read.csv(unz(temp, '202111-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202112
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202112-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202112 <- read.csv(unz(temp, '202112-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202201
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202201-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202201 <- read.csv(unz(temp, '202201-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202202
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202202-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202202 <- read.csv(unz(temp, '202202-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+# downlaod and import 202203
+dataset <- httr::GET("https://divvy-tripdata.s3.amazonaws.com/202203-divvy-tripdata.zip")
+temp <- tempfile()
+download.file(dataset$url, temp)
+
+data_202203 <- read.csv(unz(temp, '202203-divvy-tripdata.csv'))
+unlink(temp)
+```
+
+```{r}
+print(colnames(data_202004))
+
+# dropping columns containing ride and station ids
+data_202004=data_202004[,c(-1,-6,-8)]
+data_202005=data_202005[,c(-1,-6,-8)]
+data_202006=data_202006[,c(-1,-6,-8)]
+data_202007=data_202007[,c(-1,-6,-8)]
+data_202008=data_202008[,c(-1,-6,-8)]
+data_202009=data_202009[,c(-1,-6,-8)]
+data_202010=data_202010[,c(-1,-6,-8)]
+data_202011=data_202011[,c(-1,-6,-8)]
+data_202012=data_202012[,c(-1,-6,-8)]
+data_202101=data_202101[,c(-1,-6,-8)]
+data_202102=data_202102[,c(-1,-6,-8)]
+data_202103=data_202103[,c(-1,-6,-8)]
+data_202104=data_202104[,c(-1,-6,-8)]
+data_202105=data_202105[,c(-1,-6,-8)]
+data_202106=data_202106[,c(-1,-6,-8)]
+data_202107=data_202107[,c(-1,-6,-8)]
+data_202108=data_202108[,c(-1,-6,-8)]
+data_202109=data_202109[,c(-1,-6,-8)]
+data_202110=data_202110[,c(-1,-6,-8)]
+data_202111=data_202111[,c(-1,-6,-8)]
+data_202112=data_202112[,c(-1,-6,-8)]
+data_202201=data_202201[,c(-1,-6,-8)]
+data_202202=data_202202[,c(-1,-6,-8)]
+data_202203=data_202203[,c(-1,-6,-8)]
+
+print(colnames(data_202004))
+
+```
+
+
+```{r}
+# merge files -----
+bicycle_data <- bind_rows(
+  data_202004, data_202005, data_202006, data_202007, data_202008, 
+  data_202009, data_202010, data_202011, data_202012, data_202101, 
+  data_202102, data_202103, data_202104, data_202105, data_202106, 
+  data_202107, data_202108, data_202109, data_202110, data_202111, 
+  data_202112, data_202201, data_202202, data_202203)
+
+# str() to display the structure of bicycle_data
+str(bicycle_data)
+
+```
+
+
+```{r}
+# number of rows before filtering null and missing values
+nrows_unfiltered <- nrow(bicycle_data)
+print(paste("Number of rows before filtering = ", nrows_unfiltered))
+```
+
+
+```{r}
+# Get counts of unique values for each column 
+rapply(bicycle_data,function(x)length(unique(x)))
+```
+
+
+```{r}
+# Filter for null and missing values
+bicycle_data <- bicycle_data[!(is.na(bicycle_data$rideable_type) | bicycle_data$rideable_type=="" |  
+    is.na(bicycle_data$started_at) | bicycle_data$started_at=="" | 
+    is.na(bicycle_data$ended_at) | bicycle_data$ended_at=="" |   
+    is.na(bicycle_data$start_station_name) | bicycle_data$start_station_name=="" |   
+    is.na(bicycle_data$end_station_name) | bicycle_data$end_station_name=="" |   
+    is.na(bicycle_data$start_lat) | bicycle_data$start_lat=="" |      
+    is.na(bicycle_data$start_lng) | bicycle_data$start_lng=="" |   
+    is.na(bicycle_data$end_lat) | bicycle_data$end_lat=="" | 
+    is.na(bicycle_data$end_lng) | bicycle_data$end_lng=="" | 
+    is.na(bicycle_data$member_casual) | bicycle_data$member_casual==""),]
+```
+
+
+```{r}
+# numebr of rows after filtering null and missing values
+nrows_filtered <- nrow(bicycle_data)
+print(paste("Number of rows after filtering = ", nrows_filtered))
+```
+
+
+```{r}
+# Number of rows deleted 
+print(paste("Number of rows deleted = ", nrows_unfiltered - nrows_filtered))
+```
+
+
+```{r}
+# summary of bicycle data
+summary(bicycle_data)
+```
+
+```{r}
+# Get counts of unique values for each column 
+rapply(bicycle_data,function(x)length(unique(x)))
+```
+
+```{r}
+# Get unique rideable type
+unique(bicycle_data$rideable_type)
+```
+
+
+```{r}
+# deriving the weekday of the ride start time from started_at column 
+week_days <- weekdays(as.Date(bicycle_data$started_at))
+bicycle_data <- cbind(bicycle_data, week_days)
+
+# Add ride_duration duration column in the data frame
+bicycle_data$ride_duration <- difftime(bicycle_data$ended_at, bicycle_data$started_at, units = "hours") 
+
+
+# Format character start and end times into Datetime.
+bicycle_data$started_at = as_datetime(bicycle_data$started_at)
+bicycle_data$ended_at = as_datetime(bicycle_data$ended_at)
+
+bicycle_data$ride_duration <- as.numeric(bicycle_data$ride_duration)
+
+bicycle_data$start_date <- as.Date(bicycle_data$started_at, format="%Y-%m-%d")
+bicycle_data$year <- year(bicycle_data$start_date)
+bicycle_data$month <- month(bicycle_data$start_date)
+bicycle_data$day <- day(bicycle_data$start_date)
+
+#Adding days of the week column : weekday or weekend
+bicycle_data$week <- ifelse(week_days %in% c("Saturday", "Sunday"), "weekend", "weekday")
+str(bicycle_data)
+```
+
+```{r}
+# Save bicycle_data as csv and load it again. 
+write.csv(bicycle_data, "cleaned_bicycle_data.csv", row.names=FALSE)
+bicycle_data <- read.csv("cleaned_bicycle_data.csv")
+```
+
+
+```{r}
+ggplot(bicycle_data, aes(x=rideable_type, fill = member_casual))+
+  geom_bar(stat="count", width=0.7, position = position_dodge())+
+  labs(title = "#Rides vs Membership", y = "#Rides", 
+      x = "Rideable type") +
+  theme(axis.text.x = element_text(angle = 90), 
+      plot.title = element_text(color="black", size=15, face="bold.italic"),
+      axis.title.x = element_text(color="black", size=14, face="bold"),
+      axis.title.y = element_text(color="black", size=14, face="bold")) +
+        facet_wrap(~year)
+```
+
+
+```{r}
+# counts of rides having  start_station_name != end_station_name
+common_route <- rbind(bicycle_data %>% 
+  filter(start_station_name != end_station_name, member_casual == "member" ) %>%
+    group_by(start_station_name, end_station_name, member_casual, rideable_type) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    arrange(desc(n)) %>%
+    head(10), 
+  bicycle_data %>% 
+  filter(start_station_name != end_station_name, member_casual == "casual" ) %>%
+    group_by(start_station_name, end_station_name, member_casual, rideable_type) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    arrange(desc(n)) %>%
+    head(10))
+  
+common_route %>%
+    ggplot(aes(x = reorder(start_station_name,-n), y = n, fill = member_casual)) +
+    geom_bar(stat = "identity")+
+    geom_text(aes(label=n), vjust=1.6, color="black", size=1) +
+    labs(title = "#Rides vs Membership", y = "#Rides", 
+      x = "Check-out station != Check-in station") +
+    theme(axis.text.x = element_text(angle = 90), 
+        plot.title = element_text(color="black", size=15, face="bold.italic"),
+        axis.title.x = element_text(color="black", size=14, face="bold"),
+        axis.title.y = element_text(color="black", size=14, face="bold")) +
+          facet_grid(rideable_type ~ member_casual)
+
+common_route
+
+```
+
+
+```{r}
+# counts of rides having same start_station_name and end_station_name
+rbind(bicycle_data %>% 
+  filter(start_station_name == end_station_name, member_casual == "member" ) %>%
+    group_by(start_station_name, member_casual, rideable_type) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    arrange(desc(n)) %>%
+    head(10), 
+  bicycle_data %>% 
+  filter(start_station_name == end_station_name, member_casual == "casual" ) %>%
+    group_by(start_station_name, member_casual, rideable_type) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    arrange(desc(n)) %>%
+    head(10)) %>%
+    ggplot(aes(x = reorder(start_station_name,-n), y = n, fill = member_casual)) +
+    geom_bar(stat = "identity")+
+    geom_text(aes(label=n), vjust=1.6, color="black", size=1) +
+    labs(title = "#Rides vs Membership", y = "#Rides", 
+      x = "Check-out station == Check-in station") +
+    theme(axis.text.x = element_text(angle = 90), 
+        plot.title = element_text(color="black", size=15, face="bold.italic"),
+        axis.title.x = element_text(color="black", size=14, face="bold"),
+        axis.title.y = element_text(color="black", size=14, face="bold")) +
+          facet_grid(rideable_type ~ member_casual)
+    
+```
+
+
+```{r}
+# Places where bikes are rented more than 30 days
+
+bicycle_data %>% 
+  arrange(desc(ride_duration)) %>% filter(ride_duration > 30 * 24) %>% head(10) %>%
+    ggplot(aes(x = reorder(start_station_name,-ride_duration), y = ride_duration/24, fill = member_casual)) +
+    geom_bar(stat = "identity")+
+    labs(title = "Membership vs Rideable_type vs #Days_rented ", y = "Days rented for", 
+      x = "Checked out at") +
+    theme(axis.text.x = element_text(angle = 90), 
+        plot.title = element_text(color="black", size=15, face="bold.italic"),
+        axis.title.x = element_text(color="black", size=14, face="bold"),
+        axis.title.y = element_text(color="black", size=14, face="bold")) +
+          facet_wrap(rideable_type ~ member_casual)
+```
+
+
+```{r}
+rbind(bicycle_data %>%
+  filter(week =="weekend") %>%
+  group_by(week, member_casual, start_station_name, end_station_name, rideable_type) %>%
+  summarise(n = n(), .groups = "drop") %>% 
+  arrange(desc(n)) %>% head(10),
+bicycle_data %>%
+  filter(week =="weekday") %>%
+  group_by(week, member_casual, start_station_name, end_station_name, rideable_type) %>%
+  summarise(n = n(), .groups = "drop") %>% 
+  arrange(desc(n)) %>% head(10)) %>%
+  ggplot(aes(x = reorder(start_station_name, -n), y = n, fill = member_casual)) +
+    geom_bar(stat = "identity")+
+    labs(title = "Membership vs Rideable_type vs Week", y = "#Rides", 
+      x = "Checked out at") +
+    theme(axis.text.x = element_text(angle = 90),
+        plot.title = element_text(color="black", size=15, face="bold.italic"),
+        axis.title.x = element_text(color="black", size=14, face="bold"),
+        axis.title.y = element_text(color="black", size=14, face="bold")) +
+          facet_grid(week ~ member_casual + rideable_type)
+```
+
+
+# Part 2 
+```{r}
+## Find the number of check-outs per station
+start_station_name <- unique(divvy$start_station_name)
+head(start_station_name)
+
+# ## Find the number of check-ins per station
+end_station_name <- unique(divvy$end_station_name)
+head(end_station_name)
+```
+
+
+```{r}
+str(start_station_name)
+str(end_station_name)
+start_station_name[!(start_station_name %in% end_station_name)]
+end_station_name[!(end_station_name %in% start_station_name)]
+```
+
+
+```{r}
+#Top 5 stations with most check outs
+start_station_counts <- divvy %>% group_by(start_station_name) %>% summarise(n = n()) %>% ungroup() %>% arrange(desc(n))
+head(start_station_counts, 5)
+#Top 5 stations with least check outs
+tail(start_station_counts, 200)
+```
+
+
+```{r}
+#Top 5 stations with most check ins 
+end_station_counts <- divvy %>% group_by(end_station_name) %>% summarise(n = n()) %>% ungroup() %>% arrange(desc(n))
+head(end_station_counts, 5)
+#Top 5 stations with least check ins 
+tail(end_station_counts, 200)
+```
+
+
+```{r}
+## Find the number of unique days
+unique_days <- unique(divvy$start_date)
+head(unique_days)
+str(unique_days)
+```
+
+```{r}
+#total rented duration per day
+duration_per_day <- divvy %>% group_by(start_date) %>% summarise(ride_duration = sum(ride_duration))%>% ungroup()
+head(duration_per_day)
+class(duration_per_day)
+
+duration_per_day <- duration_per_day %>%
+            filter(ride_duration > 0)
+
+```
+
+```{r}
+divvy_xts <- xts(duration_per_day$ride_duration, order.by = duration_per_day$start_date)
+fig1 <- autoplot(divvy_xts) + ggtitle("Divvy daily ridership duration") + ylab("Hours per day") + xlab("Year")
+fig1
+```
+
+```{r}
+divvy_ts <- ts(divvy_xts, start = 2020, frequency = 365)
+fig2 <- ggseasonplot(divvy_ts) + ggtitle("Seasonal plot of Divvy daily ridership")
+fig2
+```
+
+```{r}
+plot(divvy_xts['2020-05-01/2020-05-28'])
+```
+
+```{r}
+divvy_w_ts <- ts(divvy_xts['2020-04-01/2021-03-31'], start = c(2020, 1), frequency = 7)
+fig3 <- ggsubseriesplot(divvy_w_ts) + ggtitle("Subseries plot for weekly seasonality")
+fig3
+```
+
+```{r}
+divvy_w <- divvy %>% group_by(week = as.POSIXct(cut(start_date, "week"))) %>% summarise(weekly_rides = sum(ride_duration)) 
+divvy_m <- divvy %>% group_by(month = as.POSIXct(cut(start_date, "month"))) %>% summarise(monthly_rides = sum(ride_duration))
+
+divvy_d_test <- divvy_xts['2020-10-01/2021-03-31']
+divvy_w_test <- divvy_w %>% filter(week >= "2020-10-01")
+divvy_m_test <- divvy_m %>% filter(month >= "2020-10-01")
+
+divvy_d_train <- divvy_xts['2020/2020-10-01']
+divvy_w_train <- divvy_w %>% filter(week < "2020-10-01")
+divvy_m_train <- divvy_m %>% filter(month < "2020-10-01")
+
+divvy_m_train <- xts(divvy_m_train$monthly_rides, order.by = divvy_m_train$month)
+
+d_ts <- ts(divvy_m_train, start = 2020, frequency = 12)
+fit1 <- ets(d_ts, damped = TRUE)
+summary(fit1)
+```
+
+```{r}
+fig4 <- autoplot(forecast(fit1, h = 6))
+fig4
+```
+
+```{r}
+# ?ets
+fit1b <- ets(d_ts, model = c("AAA"), damped = TRUE)
+summary(fit1b)
+```
+
+```{r}
+fc1 <- forecast(fit1b, h = 6)
+plot(fc1, showgap = FALSE)
+```
+
+```{r}
+#arima
+ggtsdisplay(divvy_m_train, main="Monthly Divvy Usage")
+```
+
+```{r}
+ggtsdisplay(diff(divvy_m_train))
+
+```
+
+
+```{r}
+fit5 <- Arima(divvy_m_train, order = c(1,1,0), seasonal = list(order = c(0,1,0), period = 6))
+
+fc5 <- forecast(fit5, h=3)
+plot(fc5, showgap = FALSE)
+```
+
+
+

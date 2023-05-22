@@ -1,0 +1,219 @@
+---
+title: "Group_2_Dashboard"
+author: "Vinay Danepalli"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+install.packages("randomForest")
+install.packages('rsconnect')
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+#random Forest
+cleaned_data <- cleaned_data %>% rename('week_day' = 'weekdays')
+# Random forest regression
+pred3_data <- cleaned_data %>% group_by(rideable_type, week_day, season, member_casual) %>% summarize(no_of_rides = n())
+#pred3_data <- pred3_data[1:10000,]
+
+rideable_type_vect <- unique(pred3_data$rideable_type)
+member_casual_vect <- unique(pred3_data$member_casual)
+week_day_vect <- unique(pred3_data$week_day)
+season_vect <- unique(pred3_data$season)
+
+pred3_data$rideable_type = factor(pred3_data$rideable_type, 
+                                  levels = rideable_type_vect, 
+                                  labels = c(1:length(rideable_type_vect)))
+
+pred3_data$week_day = factor(pred3_data$week_day, 
+                             levels = week_day_vect, 
+                             labels = c(1:length(week_day_vect)))
+
+pred3_data$season = factor(pred3_data$season, 
+                           levels = season_vect, 
+                           labels = c(1:length(season_vect)))
+
+pred3_data$member_casual = factor(pred3_data$member_casual, 
+                                  levels = member_casual_vect, 
+                                  labels = c(1:length(member_casual_vect)))
+
+pred3_data = pred3_data[sample(1:nrow(pred3_data)), ]
+```
+
+```{r}
+#make this example reproducible
+set.seed(42)
+
+#Use 70% of dataset as training set and remaining 30% as testing set
+sample <- sample(c(TRUE, FALSE), nrow(pred3_data), replace=TRUE, prob=c(0.9,0.1))
+train  <- pred3_data[sample, ]
+test   <- pred3_data[!sample, ]
+
+ytest = test$no_of_rides
+xtest = test %>% select(-no_of_rides)
+```
+
+
+```{r}
+#Random forest regression model
+set.seed(42)
+rf_model <- randomForest(formula = no_of_rides ~ rideable_type + week_day + season + member_casual, data=train, ntree=1000,
+                         keep.forest=TRUE, importance=TRUE,  xtest = xtest,
+                         ytest = ytest)
+
+#find number of trees that produce lowest test MSE
+which.min(rf_model$mse)
+
+#find RMSE of best model
+sqrt(rf_model$mse[which.min(rf_model$mse)]) 
+
+plot(rf_model)
+
+#use fitted bagged model to predict no_of_rides of new observation
+ypredict <- predict(rf_model, newdata=xtest)
+
+df <- data.frame(ytest, ypredict)
+
+ggplot(df, aes(ytest, ypredict, size=ytest)) + geom_point(color='skyblue') + 
+  xlab("Actual Checkout Count") + ylab("Predicted Checkout Count") + ggtitle("Random Forest Error Analysis") + 
+  theme_classic()
+```
+
+```{r}
+#####################################
+ui <- dashboardPage(
+  dashboardHeader(),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+      menuItem("Predictive Models", icon = icon("bar-chart-o"), startExpanded = TRUE,
+               menuSubItem("Random Forest", tabName = "randomforestmodel")
+               
+      )
+    ),
+    textOutput("res")
+  ),
+  
+  dashboardBody(
+    tabItems(
+      tabItem("dashboard", "",
+              box(
+                title = "Total rides of Members vs Casual Riders"
+                ,status = "primary"
+                ,solidHeader = TRUE 
+                ,collapsible = TRUE 
+                ,plotOutput("plot1", height = "300px")
+              ),
+              box(
+                title = "Avg Ride Length of Member vs Casual Rider"
+                ,status = "primary"
+                ,solidHeader = TRUE 
+                ,collapsible = TRUE 
+                ,plotOutput("plot2", height = "300px")
+              ),
+              box(
+                title = ". Total Rides of Members and Casual Riders Vs Season"
+                ,status = "primary"
+                ,solidHeader = TRUE 
+                ,collapsible = TRUE 
+                ,plotOutput("plot3", height = "300px")
+              ),
+              box(
+                title = "Average Ride Time of Members and Casual Riders Vs Season"
+                ,status = "primary"
+                ,solidHeader = TRUE 
+                ,collapsible = TRUE 
+                ,plotOutput("plot4", height = "300px")
+              ),
+              box(
+                title = "Average Ride Time of Members and Casual Riders Vs Day of the week"
+                ,status = "primary"
+                ,solidHeader = TRUE 
+                ,collapsible = TRUE 
+                ,plotOutput("plot5", height = "300px")
+              ),
+              )
+      ),
+      
+      tabItem("randomforestmodel", "",
+              box(
+                title = "Random Forest"
+                ,status = "primary"
+                ,solidHeader = TRUE 
+                ,collapsible = TRUE 
+                ,plotOutput("randomforestmodel", height = "300px")
+              )
+      )
+  )
+```
+
+
+      
+```{r}
+server <- function(input, output, session) {
+  output$plot1 <- renderPlot({
+    cleaned_data %>%  
+      group_by(member_casual, week) %>% 
+      summarise(average_ride_length = mean(ride_length), .groups="drop") %>%
+      ggplot(aes(x = week, y = average_ride_length, fill = member_casual)) +
+      geom_col(width=0.5, position = position_dodge(width=0.5)) + 
+      labs(title ="Average ride time of Members and Casual riders Vs. Day of the week")
+  })
+  output$plot2 <- renderPlot({
+    cleaned_data %>% group_by(member_casual) %>%
+      summarise(average_ride_length = mean(ride_length), median_length = median(ride_length), 
+                max_ride_length = max(ride_length), min_ride_length = min(ride_length)) %>%
+      ggplot(aes(x = member_casual, y = average_ride_length)) +
+      labs(title ="Average Ride length of member vs casual user ") +
+      geom_col(width=0.5, position = position_dodge(width=0.5)) +
+      scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+    
+  })
+  output$plot3 <- renderPlot({
+    cleaned_data %>% group_by(member_casual) %>% summarise(total_rides = length(started_at)) %>%
+      ggplot(aes(x = member_casual, y = total_rides)) +
+      labs(title ="Total rides of Members vs Casual riders ") +
+      geom_col(width=0.5, position = position_dodge(width=0.5)) +
+      scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+  })
+  output$plot4 <- renderPlot({
+    cleaned_data %>% group_by(member_casual, season) %>%
+      summarise(number_of_rides = n(),average_ride_length = mean(ride_length),.groups="drop") %>% 
+      arrange(member_casual, season)%>% 
+      ggplot(aes(x = season, y = number_of_rides, fill = member_casual)) +
+      labs(title ="Total rides of Members and Casual riders Vs. Season") +
+      geom_col(width=0.5, position = position_dodge(width=0.5)) +
+      scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+  })
+  output$plot5 <- renderPlot({
+    cleaned_data %>% group_by(member_casual, week_day) %>%
+      summarise(number_of_rides = n(),average_ride_length = mean(ride_length),.groups="drop")%>%
+      ggplot(aes(x = week_day, y = number_of_rides, fill = member_casual)) +
+      labs(title ="Total rides of Members and Casual riders Vs. Day of Week") +
+      geom_col(width=0.5, position = position_dodge(width=0.5)) +
+      scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+    
+  })
+  
+  output$randomforestmodel <- renderPlot({
+    ggplot(df, aes(ytest, ypredict, size=ytest)) + geom_point(color='skyblue') + 
+      xlab("Actual Checkout Count") + ylab("Predicted Checkout Count") + ggtitle("Random Forest Error Analysis") + 
+      theme_classic()
+    
+    
+  })
+  
+}
+```
+
+```{r}
+shinyApp(ui, server)
+```
